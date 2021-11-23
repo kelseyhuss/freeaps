@@ -713,10 +713,10 @@ Enact a temp Basal or a temp target */
 "Adds Phone Battery" = "Visa telefonens batterinivå";
 
 /* */
-/* */
+"Adds Transmitter Battery" = "Lägg till sändarbatteri";
 
-"Adds Transmitter Battery
-Also vibrate" = "Vibrera också";
+/* */
+"Also vibrate" = "Vibrera också";
 
 /* */
 "Additional notification types" = "Ytterligare notistyper";

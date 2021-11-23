@@ -704,10 +704,7 @@ Enact a temp Basal or a temp target */
 "Adds Phone Battery" = "Telefon Pilini Ekler";
 
 /* */
-/* */
-
-"Adds Transmitter Battery
-Also vibrate" = "Also vibrate";
+"Also vibrate" = "Also vibrate";
 
 /* */
 "Additional notification types" = "Ek bildirim çeşitleri";

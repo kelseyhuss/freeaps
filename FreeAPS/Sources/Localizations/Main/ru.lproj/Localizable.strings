@@ -704,10 +704,7 @@ Enact a temp Basal or a temp target */
 "Adds Phone Battery" = "Показывать заряд батареи телефона";
 
 /* */
-/* */
-
-"Adds Transmitter Battery
-Also vibrate" = "Вибрировать";
+"Also vibrate" = "Вибрировать";
 
 /* */
 "Additional notification types" = "Дополнительные уведомления";
