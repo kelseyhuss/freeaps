@@ -1,5 +1,4 @@
 import Foundation
-import LibreTransmitter
 import Swinject
 
 struct Calibration: JSON, Hashable, Identifiable {
@@ -31,13 +30,9 @@ final class BaseCalibrationService: CalibrationService, Injectable {
         static let maxSlope = 1.25
         static let minIntercept = -100.0
         static let maxIntercept = 100.0
-        static let maxValue = 500.0
-        static let minValue = 0.0
     }
 
     @Injected() var storage: FileStorage!
-    @Injected() var notificationCenter: NotificationCenter!
-    private var lifetime = Lifetime()
 
     private(set) var calibrations: [Calibration] = [] {
         didSet {
@@ -48,15 +43,6 @@ final class BaseCalibrationService: CalibrationService, Injectable {
     init(resolver: Resolver) {
         injectServices(resolver)
         calibrations = storage.retrieve(OpenAPS.FreeAPS.calibrations, as: [Calibration].self) ?? []
-        subscribe()
-    }
-
-    private func subscribe() {
-        notificationCenter.publisher(for: .newSensorDetected)
-            .sink { [weak self] _ in
-                self?.removeAllCalibrations()
-            }
-            .store(in: &lifetime)
     }
 
     var slope: Double {
@@ -114,6 +100,6 @@ final class BaseCalibrationService: CalibrationService, Injectable {
     }
 
     private func linearRegression(_ x: Double) -> Double {
-        (intercept + slope * x).clamped(Config.minValue ... Config.maxValue)
+        intercept + slope * x
     }
 }

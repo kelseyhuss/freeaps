@@ -17,7 +17,7 @@
 "Continue without bolus" = "Продолжить без болюса";
 
 /* Header */
-"Enact Bolus" = "Ввод болюса";
+"Enact Bolus" = "Вввод болюса";
 
 /* Button */
 "Enact bolus" = "Ввести болюс";
@@ -42,6 +42,12 @@
 
 /*  */
 "Agree and continue" = "Согласиться и Продолжить";
+
+/* Disclaimer when opening app for first time*/
+"Disclaimer" = "Дисклеймер";
+
+/* Disclaimer Description */
+"FreeAPS X is in an active development state. We do not recommend to use the system for everyday control of blood glucose! Use it for testing purposes only at your own risk. We are not responsible for your decisions and actions." = "FreeAPS X находится в разработке. Мы не рекомендуем его для ежедневного контроля сахара в крови! Используйте только для тестирования на свой страх и риск. Мы не несём ответственности за ваши действия.";
 
 /* Enacted at a date */
 "Enacted at %@" = "Введено в %@";
@@ -213,7 +219,7 @@ Enact a temp Basal or a temp target */
 "Enact" = "Запустить";
 
 /* */
-"Manual Temp Basal" = "Ручная ВБС";
+"Manual Temp Basal" = "Ручная Вбс";
 
 /* Allow uploads tp NS */
 "Allow uploads" = "Разрешить выгрузку";
@@ -564,16 +570,7 @@ Enact a temp Basal or a temp target */
 "Detected sensor is invalid: %@" = "Обнаруженный сенсор невалиден: %@";
 
 /* Low Battery */
-"Low battery" = "Низкий заряд батареи";
-
-/* */
-"Invalid sensor" = "Сенсор неисправен";
-
-/* */
-"Sensor change" = "Смена сенсора";
-
-/* */
-"Sensor expires soon" = "Сенсор скоро закончится";
+"Low Battery" = "Низкий заряд батареи";
 
 /* Battery is running low %@, consider charging your %@ device as soon as possible */
 "Battery is running low %@, consider charging your %@ device as soon as possible" = "Батарея работает на низком уровне %@, попробуйте зарядить устройство %@ как можно скорее";
@@ -707,13 +704,13 @@ Enact a temp Basal or a temp target */
 "Adds Phone Battery" = "Показывать заряд батареи телефона";
 
 /* */
-"Adds Transmitter Battery" = "Добавить батарею передатчика";
-
-/* */
 "Also vibrate" = "Вибрировать";
 
 /* */
 "Additional notification types" = "Дополнительные уведомления";
+
+/* */
+"Low battery" = "Low battery";
 
 /* */
 "Misc" = "Разное";
@@ -725,13 +722,10 @@ Enact a temp Basal or a temp target */
 "Low" = "Низкий";
 
 /* */
-"High" = "Высокий";
-
-/* */
 "glucose" = "глюкоза";
 
 /* */
-"Schedule " = "Расписание ";
+"Schedule %d" = "Расписание %d";
 
 /* */
 "tapped save schedules" = "выбрано сохранение расписаний";
@@ -833,9 +827,6 @@ Enact a temp Basal or a temp target */
 
 /* Glucose Simulator CGM */
 "Glucose Simulator" = "Симулятор глюкозы";
-
-/* Restored state message */
-"Bluetooth State restored (APS restarted?). Found %d peripherals, and connected to %@ with identifier %@" = "Bluetooth состояние восстановлено (APS перезапущен?). Найдено %d периферийных устройств и подключено к %@ с идентификатором %@";
 
 
 /*

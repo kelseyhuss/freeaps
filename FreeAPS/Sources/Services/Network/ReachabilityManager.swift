@@ -1,3 +1,4 @@
+import Alamofire
 import Foundation
 
 typealias ReachabilityStatus = NetworkReachabilityManager.NetworkReachabilityStatus

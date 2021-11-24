@@ -1,4 +1,3 @@
-import Combine
 import Foundation
 
 protocol NotificationCenter {
@@ -15,13 +14,6 @@ protocol NotificationCenter {
         queue: OperationQueue?,
         using block: @escaping (Notification) -> Void
     ) -> NSObjectProtocol
-
-    func publisher(for name: Notification.Name, object: AnyObject?) -> Foundation.NotificationCenter.Publisher
-    func publisher(for name: Notification.Name) -> Foundation.NotificationCenter.Publisher
 }
 
-extension Foundation.NotificationCenter: NotificationCenter {
-    func publisher(for name: Notification.Name) -> Foundation.NotificationCenter.Publisher {
-        publisher(for: name, object: nil)
-    }
-}
+extension Foundation.NotificationCenter: NotificationCenter {}

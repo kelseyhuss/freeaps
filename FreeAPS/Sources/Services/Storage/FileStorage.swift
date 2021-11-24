@@ -1,3 +1,4 @@
+import Disk
 import Foundation
 
 protocol FileStorage {

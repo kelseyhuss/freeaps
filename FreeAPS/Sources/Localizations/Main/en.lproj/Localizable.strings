@@ -43,6 +43,12 @@
 /*  */
 "Agree and continue" = "Agree and Continue";
 
+/* Disclaimer when opening app for first time*/
+"Disclaimer" = "Disclaimer";
+
+/* Disclaimer Description */
+"FreeAPS X is in an active development state. We do not recommend to use the system for everyday control of blood glucose! Use it for testing purposes only at your own risk. We are not responsible for your decisions and actions." = "FreeAPS X is in an active development state. We do not recommend to use the system for everyday control of blood glucose! Use it for testing purposes only at your own risk. We are not responsible for your decisions and actions.";
+
 /* Enacted at a date */
 "Enacted at %@" = "Enacted at %@";
 
@@ -717,6 +723,9 @@ Enact a temp Basal or a temp target */
 "Additional notification types" = "Additional notification types";
 
 /* */
+"Low battery" = "Low battery";
+
+/* */
 "Misc" = "Misc";
 
 /* */
@@ -724,9 +733,6 @@ Enact a temp Basal or a temp target */
 
 /* */
 "Low" = "Low";
-
-/* */
-"High" = "High";
 
 /* */
 "glucose" = "glucose";
@@ -834,9 +840,6 @@ Enact a temp Basal or a temp target */
 
 /* Glucose Simulator CGM */
 "Glucose Simulator" = "Glucose Simulator";
-
-/* Restored state message */
-"Bluetooth State restored (APS restarted?). Found %d peripherals, and connected to %@ with identifier %@" = "Bluetooth State restored (APS restarted?). Found %d peripherals, and connected to %@ with identifier %@";
 
 
 /*

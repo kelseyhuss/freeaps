@@ -43,6 +43,12 @@
 /*  */
 "Agree and continue" = "Zaakceptuj i kontynuuj";
 
+/* Disclaimer when opening app for first time*/
+"Disclaimer" = "Disclaimer";
+
+/* Disclaimer Description */
+"FreeAPS X is in an active development state. We do not recommend to use the system for everyday control of blood glucose! Use it for testing purposes only at your own risk. We are not responsible for your decisions and actions." = "FreeAPS X jest w fazie aktywnego rozwoju. Nie zalecamy używania systemu do codziennej kontroli poziomów glukozy we krwi. System może być użyty w celach testowych tylko na własne ryzyko. Nie ponosimy odpowiedzialności za twoje decyzje i działania.";
+
 /* Enacted at a date */
 "Enacted at %@" = "Enacted at %@";
 
@@ -566,16 +572,7 @@ Połączono z Nightscout!";
 "Detected sensor is invalid: %@" = "Detected sensor is invalid: %@";
 
 /* Low Battery */
-"Low battery" = "Low battery";
-
-/* */
-"Invalid sensor" = "Invalid sensor";
-
-/* */
-"Sensor change" = "Sensor change";
-
-/* */
-"Sensor expires soon" = "Sensor expires soon";
+"Low Battery" = "Low Battery";
 
 /* Battery is running low %@, consider charging your %@ device as soon as possible */
 "Battery is running low %@, consider charging your %@ device as soon as possible" = "Battery is running low %@, consider charging your %@ device as soon as possible";
@@ -709,13 +706,13 @@ Połączono z Nightscout!";
 "Adds Phone Battery" = "Adds Phone Battery";
 
 /* */
-"Adds Transmitter Battery" = "Adds Transmitter Battery";
-
-/* */
 "Also vibrate" = "Also vibrate";
 
 /* */
 "Additional notification types" = "Additional notification types";
+
+/* */
+"Low battery" = "Low battery";
 
 /* */
 "Misc" = "Misc";
@@ -727,13 +724,10 @@ Połączono z Nightscout!";
 "Low" = "Low";
 
 /* */
-"High" = "High";
-
-/* */
 "glucose" = "glucose";
 
 /* */
-"Schedule " = "Schedule ";
+"Schedule %d" = "Schedule %d";
 
 /* */
 "tapped save schedules" = "tapped save schedules";
@@ -835,9 +829,6 @@ Połączono z Nightscout!";
 
 /* Glucose Simulator CGM */
 "Glucose Simulator" = "Glucose Simulator";
-
-/* Restored state message */
-"Bluetooth State restored (APS restarted?). Found %d peripherals, and connected to %@ with identifier %@" = "Bluetooth State restored (APS restarted?). Found %d peripherals, and connected to %@ with identifier %@";
 
 
 /*

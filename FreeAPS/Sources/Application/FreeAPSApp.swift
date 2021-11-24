@@ -3,7 +3,6 @@ import Swinject
 
 @main struct FreeAPSApp: App {
     @Environment(\.scenePhase) var scenePhase
-    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     // Dependencies Assembler
     // contain all dependencies Assemblies
@@ -44,10 +43,26 @@ import Swinject
     var body: some Scene {
         WindowGroup {
             Main.RootView(resolver: resolver)
-                .environmentObject(appDelegate)
         }
         .onChange(of: scenePhase) { newScenePhase in
             debug(.default, "APPLICATION PHASE: \(newScenePhase)")
         }
+    }
+}
+
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    func userNotificationCenter(
+        _: UNUserNotificationCenter,
+        willPresent _: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions)
+            -> Void
+    ) {
+        completionHandler([.banner, .badge, .sound])
+    }
+
+    func application(_: UIApplication, didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Override point for customization after application launch.
+        UNUserNotificationCenter.current().delegate = self
+        return true
     }
 }
