@@ -67,6 +67,8 @@ final class BaseDeviceDataManager: DeviceDataManager, Injectable {
                 }
             } else {
                 pumpDisplayState.value = nil
+                pumpExpiresAtDate.send(nil)
+                pumpName.send("")
             }
         }
     }
@@ -86,9 +88,7 @@ final class BaseDeviceDataManager: DeviceDataManager, Injectable {
     }
 
     func setupPumpManager() {
-        if let pumpManagerRawValue = UserDefaults.standard.pumpManagerRawValue {
-            pumpManager = pumpManagerFromRawValue(pumpManagerRawValue)
-        }
+        pumpManager = UserDefaults.standard.pumpManagerRawValue.flatMap { pumpManagerFromRawValue($0) }
     }
 
     func createBolusProgressReporter() -> DoseProgressReporter? {
@@ -102,26 +102,7 @@ final class BaseDeviceDataManager: DeviceDataManager, Injectable {
                 return
             }
 
-            let content = UNMutableNotificationContent()
-            content.badge = 0
-            let lastGlucose: BloodGlucose? = self.glucoseStorage.recent().last
-            if lastGlucose != nil {
-                if date.timeIntervalSince(lastGlucose!.dateString) < 5.1 * 60 {
-                    content.badge = NSNumber(value: lastGlucose!.glucose! * 10 / 18) // mmol/l value * 10
-                }
-            }
-
-            let request = UNNotificationRequest(
-                identifier: "badgeGlucose",
-                content: content,
-                trigger: nil
-            )
-
-            DispatchQueue.main.async {
-                UNUserNotificationCenter.current().add(request)
-            }
-
-            var updateInterval: TimeInterval = 1 * 60
+            var updateInterval: TimeInterval = 4.5 * 60
 
             switch date.timeIntervalSince(lastHeartBeatTime) {
             case let interval where interval > 10.minutes.timeInterval:

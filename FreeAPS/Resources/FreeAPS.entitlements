@@ -4,12 +4,11 @@
 <dict>
 	<key>com.apple.developer.nfc.readersession.formats</key>
 	<array>
-		<string>NDEF</string>
 		<string>TAG</string>
 	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.T7VZ6LU6H3.aps.JBMgroup</string>
+		<string>$(APP_GROUP_ID)</string>
 	</array>
 </dict>
 </plist>

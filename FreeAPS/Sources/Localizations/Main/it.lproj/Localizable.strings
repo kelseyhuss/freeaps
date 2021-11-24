@@ -43,12 +43,6 @@
 /*  */
 "Agree and continue" = "Acconsenti e Continua";
 
-/* Disclaimer when opening app for first time*/
-"Disclaimer" = "Disclaimer";
-
-/* Disclaimer Description */
-"FreeAPS X is in an active development state. We do not recommend to use the system for everyday control of blood glucose! Use it for testing purposes only at your own risk. We are not responsible for your decisions and actions." = "FreeAPS X è in uno stato attivo di sviluppo. Non consigliamo di usare il sistema per il controllo giornaliero del glucosio del sangue! Usalo per scopi di test solo a tuo rischio. Non siamo responsabili per le tue decisioni e azioni.";
-
 /* Enacted at a date */
 "Enacted at %@" = "Eseguito alle %@";
 
@@ -570,7 +564,16 @@ Enact a temp Basal or a temp target */
 "Detected sensor is invalid: %@" = "Detected sensor is invalid: %@";
 
 /* Low Battery */
-"Low Battery" = "Low Battery";
+"Low battery" = "Low battery";
+
+/* */
+"Invalid sensor" = "Invalid sensor";
+
+/* */
+"Sensor change" = "Sensor change";
+
+/* */
+"Sensor expires soon" = "Sensor expires soon";
 
 /* Battery is running low %@, consider charging your %@ device as soon as possible */
 "Battery is running low %@, consider charging your %@ device as soon as possible" = "Battery is running low %@, consider charging your %@ device as soon as possible";
@@ -704,13 +707,13 @@ Enact a temp Basal or a temp target */
 "Adds Phone Battery" = "Aggiungi Batteria del Telefono";
 
 /* */
+"Adds Transmitter Battery" = "Adds Transmitter Battery";
+
+/* */
 "Also vibrate" = "Also vibrate";
 
 /* */
 "Additional notification types" = "Aggiungi tipi di notifica";
-
-/* */
-"Low battery" = "Low battery";
 
 /* */
 "Misc" = "Varie";
@@ -722,10 +725,13 @@ Enact a temp Basal or a temp target */
 "Low" = "Basso";
 
 /* */
+"High" = "High";
+
+/* */
 "glucose" = "glucose";
 
 /* */
-"Schedule %d" = "Pianifica %d";
+"Schedule " = "Schedule ";
 
 /* */
 "tapped save schedules" = "ha toccato salva pianificazioni";
@@ -827,6 +833,9 @@ Enact a temp Basal or a temp target */
 
 /* Glucose Simulator CGM */
 "Glucose Simulator" = "Glucose Simulator";
+
+/* Restored state message */
+"Bluetooth State restored (APS restarted?). Found %d peripherals, and connected to %@ with identifier %@" = "Bluetooth State restored (APS restarted?). Found %d peripherals, and connected to %@ with identifier %@";
 
 
 /*
