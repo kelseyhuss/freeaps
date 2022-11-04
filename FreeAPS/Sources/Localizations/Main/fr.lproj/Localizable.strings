@@ -899,6 +899,9 @@ Enact a temp Basal or a temp target */
 /* Sensor day(s) */
 " day(s)" = " jour(s)";
 
+/* Option to show HR in Watch app*/
+"Display HR on Watch" = "Display HR on Watch";
+
 
 /* Headers for settings ----------------------- */
 "OpenAPS main settings" = "Paramètres OpenAPS";

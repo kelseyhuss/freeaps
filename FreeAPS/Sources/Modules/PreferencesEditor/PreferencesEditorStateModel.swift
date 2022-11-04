@@ -7,6 +7,7 @@ extension PreferencesEditor {
         @Published var allowAnnouncements = false
         @Published var insulinReqFraction: Decimal = 2.0
         @Published var skipBolusScreenAfterCarbs = false
+        @Published var displayHR = false
 
         @Published var sections: [FieldSection] = []
 
@@ -15,6 +16,7 @@ extension PreferencesEditor {
 
             subscribeSetting(\.allowAnnouncements, on: $allowAnnouncements) { allowAnnouncements = $0 }
             subscribeSetting(\.insulinReqFraction, on: $insulinReqFraction) { insulinReqFraction = $0 }
+            subscribeSetting(\.displayHR, on: $displayHR) { displayHR = $0 }
             subscribeSetting(\.skipBolusScreenAfterCarbs, on: $skipBolusScreenAfterCarbs) { skipBolusScreenAfterCarbs = $0 }
 
             subscribeSetting(\.units, on: $unitsIndex.map { $0 == 0 ? GlucoseUnits.mgdL : .mmolL }) {
@@ -89,8 +91,6 @@ extension PreferencesEditor {
                 )
             ]
 
-            // MARK: - SMB fields
-
             let dynamicISF = [
                 Field(
                     displayName: "Enable Dynamic ISF",
@@ -132,7 +132,7 @@ extension PreferencesEditor {
                     displayName: "Weighted Average of TDD. Weight of past 24 hours:",
                     type: .decimal(keypath: \.weightPercentage),
                     infoText: NSLocalizedString(
-                        "Has to be > 0 and <= 1.\nDefault is 0.65 (65 %) * past 24 hours. The rest will be from 7 days TDD average (0.35). To only use past 24 hours, set this to 1.\nTo avoid sudden fluctuations, an average of past 2 hours of TDD calc is used as past 24 hours TDD.",
+                        "Has to be > 0 and <= 1.\nDefault is 0.65 (65 %) * past 24 hours. The rest will be from average of total data (14 days) of all TDD calculations (0.35). To only use past 24 hours, set this to 1.\nTo avoid sudden fluctuations, an average of the past 2 hours of TDD calcs is used instead of just the current TDD (past 24 hours at this moment).",
                         comment: "Weight of past 24 hours of TDD"
                     ),
                     settable: self
@@ -143,6 +143,15 @@ extension PreferencesEditor {
                     infoText: NSLocalizedString(
                         "Enable adjustment of basal based on the ratio of 24 h : 7 day average TDD",
                         comment: "Enable adjustment of basal based on the ratio of 24 h : 7 day average TDD"
+                    ),
+                    settable: self
+                ),
+                Field(
+                    displayName: "Threshold Setting",
+                    type: .decimal(keypath: \.threshold_setting),
+                    infoText: NSLocalizedString(
+                        "The default threshold in FAX depends on your current minimum BG target. If your minimum BG target = 90 mg/dl -> threshold of 65 mg/dl, if min_bg = 100 -> threshold of 70, if min_bg = 110 -> threshold of 75, and if min_bg = 130 -> threshold of 85. This settings allows you to change the default  to a higher threshold for a possibly safer looping with dynISF. Valid values are 65 <= Threshold Setting <= 120 for this setting. ",
+                        comment: "Threshold Setting"
                     ),
                     settable: self
                 )
@@ -200,6 +209,24 @@ extension PreferencesEditor {
                     infoText: NSLocalizedString(
                         "Defaults to false. When true, allows supermicrobolus (if otherwise enabled) even with high temp targets.",
                         comment: "Allow SMB With High Temptarget"
+                    ),
+                    settable: self
+                ),
+                Field(
+                    displayName: "Enable SMB With High BG",
+                    type: .boolean(keypath: \.enableSMB_high_bg),
+                    infoText: NSLocalizedString(
+                        "Enable SMBs when a high BG is detected, based on the high BG target (adjusted or profile)",
+                        comment: "Enable SMB With High BG"
+                    ),
+                    settable: self
+                ),
+                Field(
+                    displayName: "... When Blood Glucose Is Over (mg/dl):",
+                    type: .decimal(keypath: \.enableSMB_high_bg_target),
+                    infoText: NSLocalizedString(
+                        "Set the value enableSMB_high_bg will compare against to enable SMB. If BG > than this value, SMBs should enable.",
+                        comment: "... When Blood Glucose Is Over (mg/dl):"
                     ),
                     settable: self
                 ),
