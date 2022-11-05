@@ -2,9 +2,6 @@ import Combine
 import Foundation
 import LoopKit
 import LoopKitUI
-import OmniBLE
-import OmniKit
-import RileyLinkKit
 import SwiftDate
 import Swinject
 
@@ -13,7 +10,6 @@ protocol APSManager {
     func autotune() -> AnyPublisher<Autotune?, Never>
     func enactBolus(amount: Double, isSMB: Bool)
     var pumpManager: PumpManagerUI? { get set }
-    var bluetoothManager: BluetoothStateManager? { get }
     var pumpDisplayState: CurrentValueSubject<PumpDisplayState?, Never> { get }
     var pumpName: CurrentValueSubject<String, Never> { get }
     var isLooping: CurrentValueSubject<Bool, Never> { get }
@@ -21,7 +17,6 @@ protocol APSManager {
     var lastLoopDateSubject: PassthroughSubject<Date, Never> { get }
     var bolusProgress: CurrentValueSubject<Decimal?, Never> { get }
     var pumpExpiresAtDate: CurrentValueSubject<Date?, Never> { get }
-    var isManualTempBasal: Bool { get }
     func enactTempBasal(rate: Double, duration: TimeInterval)
     func makeProfiles() -> AnyPublisher<Bool, Never>
     func determineBasal() -> AnyPublisher<Bool, Never>
@@ -38,7 +33,6 @@ enum APSError: LocalizedError {
     case glucoseError(message: String)
     case apsError(message: String)
     case deviceSyncError(message: String)
-    case manualBasalTemp(message: String)
 
     var errorDescription: String? {
         switch self {
@@ -52,8 +46,6 @@ enum APSError: LocalizedError {
             return "APS error: \(message)"
         case let .deviceSyncError(message):
             return "Sync error: \(message)"
-        case let .manualBasalTemp(message):
-            return "Manual Basal Temp : \(message)"
         }
     }
 }
@@ -62,7 +54,6 @@ final class BaseAPSManager: APSManager, Injectable {
     private let processQueue = DispatchQueue(label: "BaseAPSManager.processQueue")
     @Injected() private var storage: FileStorage!
     @Injected() private var pumpHistoryStorage: PumpHistoryStorage!
-    @Injected() private var alertHistoryStorage: AlertHistoryStorage!
     @Injected() private var glucoseStorage: GlucoseStorage!
     @Injected() private var tempTargetsStorage: TempTargetsStorage!
     @Injected() private var carbsStorage: CarbsStorage!
@@ -86,10 +77,6 @@ final class BaseAPSManager: APSManager, Injectable {
         get { deviceDataManager.pumpManager }
         set { deviceDataManager.pumpManager = newValue }
     }
-
-    var bluetoothManager: BluetoothStateManager? { deviceDataManager.bluetoothManager }
-
-    @Persisted(key: "isManualTempBasal") var isManualTempBasal: Bool = false
 
     let isLooping = CurrentValueSubject<Bool, Never>(false)
     let lastLoopDateSubject = PassthroughSubject<Date, Never>()
@@ -149,21 +136,6 @@ final class BaseAPSManager: APSManager, Injectable {
                     self.createBolusReporter()
                 } else {
                     self.clearBolusReporter()
-                }
-            }
-            .store(in: &lifetime)
-
-        // manage a manual Temp Basal from OmniPod - Force loop() after stop a temp basal or finished
-        deviceDataManager.manualTempBasal
-            .receive(on: processQueue)
-            .sink { manualBasal in
-                if manualBasal {
-                    self.isManualTempBasal = true
-                } else {
-                    if self.isManualTempBasal {
-                        self.isManualTempBasal = false
-                        self.loop()
-                    }
                 }
             }
             .store(in: &lifetime)
@@ -411,27 +383,21 @@ final class BaseAPSManager: APSManager, Injectable {
         }
 
         guard let pump = pumpManager else { return }
-
-        // unable to do temp basal during manual temp basal 😁
-        if isManualTempBasal {
-            processError(APSError.manualBasalTemp(message: "Loop not possible during the manual basal temp"))
-            return
-        }
-
         debug(.apsManager, "Enact temp basal \(rate) - \(duration)")
 
         let roundedAmout = pump.roundToSupportedBasalRate(unitsPerHour: rate)
-        pump.enactTempBasal(unitsPerHour: roundedAmout, for: duration) { error in
-            if let error = error {
-                debug(.apsManager, "Temp Basal failed with error: \(error.localizedDescription)")
-                self.processError(APSError.pumpError(error))
-            } else {
+        pump.enactTempBasal(unitsPerHour: roundedAmout, for: duration) { result in
+            switch result {
+            case .success:
                 debug(.apsManager, "Temp Basal succeeded")
                 let temp = TempBasal(duration: Int(duration / 60), rate: Decimal(rate), temp: .absolute, timestamp: Date())
                 self.storage.save(temp, as: OpenAPS.Monitor.tempBasal)
                 if rate == 0, duration == 0 {
                     self.pumpHistoryStorage.saveCancelTempEvents()
                 }
+            case let .failure(error):
+                debug(.apsManager, "Temp Basal failed with error: \(error.localizedDescription)")
+                self.processError(APSError.pumpError(error))
             }
         }
     }
@@ -475,22 +441,14 @@ final class BaseAPSManager: APSManager, Injectable {
                 return
             }
             let roundedAmount = pump.roundToSupportedBolusVolume(units: Double(amount))
-            pump.enactBolus(units: roundedAmount, activationType: .manualRecommendationAccepted) { error in
-                if let error = error {
-                    // warning(.apsManager, "Announcement Bolus failed with error: \(error.localizedDescription)")
-                    switch error {
-                    case .uncertainDelivery:
-                        // Do not generate notification on uncertain delivery error
-                        break
-                    default:
-                        // Do not generate notifications for automatic boluses that fail.
-                        warning(.apsManager, "Announcement Bolus failed with error: \(error.localizedDescription)")
-                    }
-
-                } else {
+            pump.enactBolus(units: roundedAmount, automatic: false) { result in
+                switch result {
+                case .success:
                     debug(.apsManager, "Announcement Bolus succeeded")
                     self.announcementsStorage.storeAnnouncements([announcement], enacted: true)
                     self.bolusProgress.send(0)
+                case let .failure(error):
+                    warning(.apsManager, "Announcement Bolus failed with error: \(error.localizedDescription)")
                 }
             }
         case let .pump(pumpAction):
@@ -586,12 +544,6 @@ final class BaseAPSManager: APSManager, Injectable {
 
         guard let pump = pumpManager else {
             return Fail(error: APSError.apsError(message: "Pump not set")).eraseToAnyPublisher()
-        }
-
-        // unable to do temp basal during manual temp basal 😁
-        if isManualTempBasal {
-            return Fail(error: APSError.manualBasalTemp(message: "Loop not possible during the manual basal temp"))
-                .eraseToAnyPublisher()
         }
 
         let basalPublisher: AnyPublisher<Void, Error> = Deferred { () -> AnyPublisher<Void, Error> in
@@ -1076,18 +1028,16 @@ private extension PumpManager {
         .eraseToAnyPublisher()
     }
 
-    func enactBolus(units: Double, automatic: Bool) -> AnyPublisher<DoseEntry?, Error> {
+    func enactBolus(units: Double, automatic: Bool) -> AnyPublisher<DoseEntry, Error> {
         Future { promise in
-            // convert automatic
-            let automaticValue = automatic ? BolusActivationType.automatic : BolusActivationType.manualRecommendationAccepted
-
-            self.enactBolus(units: units, activationType: automaticValue) { error in
-                if let error = error {
+            self.enactBolus(units: units, automatic: automatic) { result in
+                switch result {
+                case let .success(dose):
+                    debug(.apsManager, "Bolus succeded: \(units)")
+                    promise(.success(dose))
+                case let .failure(error):
                     debug(.apsManager, "Bolus failed: \(units)")
                     promise(.failure(error))
-                } else {
-                    debug(.apsManager, "Bolus succeded: \(units)")
-                    promise(.success(nil))
                 }
             }
         }
