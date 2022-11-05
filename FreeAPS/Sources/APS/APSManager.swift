@@ -490,21 +490,18 @@ final class BaseAPSManager: APSManager, Injectable {
                 processError(error)
                 return
             }
-            // unable to do temp basal during manual temp basal 😁
-            if isManualTempBasal {
-                processError(APSError.manualBasalTemp(message: "Loop not possible during the manual basal temp"))
-                return
-            }
+            
             guard !settings.closedLoop else {
                 return
             }
             let roundedRate = pump.roundToSupportedBasalRate(unitsPerHour: Double(rate))
-            pump.enactTempBasal(unitsPerHour: roundedRate, for: TimeInterval(duration) * 60) { error in
-                if let error = error {
-                    warning(.apsManager, "Announcement TempBasal failed with error: \(error.localizedDescription)")
-                } else {
+            pump.enactTempBasal(unitsPerHour: roundedRate, for: TimeInterval(duration) * 60) { result in
+                switch result {
+                case .success:
                     debug(.apsManager, "Announcement TempBasal succeeded")
                     self.announcementsStorage.storeAnnouncements([announcement], enacted: true)
+                case let .failure(error):
+                    warning(.apsManager, "Announcement TempBasal failed with error: \(error.localizedDescription)")
                 }
             }
         }
@@ -802,7 +799,7 @@ final class BaseAPSManager: APSManager, Injectable {
             CGM: cgm.rawValue,
             insulinType: insulin_type.rawValue,
             peakActivityTime: iPa,
-            TDD: currentTDD ?? 0,
+            TDD: currentTDD,
             Carbs_24h: carbTotal,
             TIR: tirString,
             BG_Average: bgAverageString,
@@ -987,46 +984,32 @@ final class BaseAPSManager: APSManager, Injectable {
         bolusReporter?.addObserver(self)
     }
 
-    private func updateStatus() {
-        debug(.apsManager, "force update status")
-        guard let pump = pumpManager else {
-            return
-        }
-
-        if let omnipod = pump as? OmnipodPumpManager {
-            omnipod.getPodStatus { _ in }
-        }
-        if let omnipodBLE = pump as? OmniBLEPumpManager {
-            omnipodBLE.getPodStatus { _ in }
-        }
-    }
-
     private func clearBolusReporter() {
         bolusReporter?.removeObserver(self)
         bolusReporter = nil
-        processQueue.asyncAfter(deadline: .now() + 0.5) {
+        processQueue.asyncAfter(deadline: .now() + 1) {
             self.bolusProgress.send(nil)
-            self.updateStatus()
-        }
-    }
-}
-
-private extension PumpManager {
-    func enactTempBasal(unitsPerHour: Double, for duration: TimeInterval) -> AnyPublisher<DoseEntry?, Error> {
-        Future { promise in
-            self.enactTempBasal(unitsPerHour: unitsPerHour, for: duration) { error in
-                if let error = error {
-                    debug(.apsManager, "Temp basal failed: \(unitsPerHour) for: \(duration)")
-                    promise(.failure(error))
-                } else {
-                    debug(.apsManager, "Temp basal succeded: \(unitsPerHour) for: \(duration)")
-                    promise(.success(nil))
-                }
             }
         }
-        .mapError { APSError.pumpError($0) }
-        .eraseToAnyPublisher()
     }
+
+    private extension PumpManager {
+        func enactTempBasal(unitsPerHour: Double, for duration: TimeInterval) -> AnyPublisher<DoseEntry, Error> {
+            Future { promise in
+                self.enactTempBasal(unitsPerHour: unitsPerHour, for: duration) { result in
+                    switch result {
+                    case let .success(dose):
+                        debug(.apsManager, "Temp basal succeded: \(unitsPerHour) for: \(duration)")
+                        promise(.success(dose))
+                    case let .failure(error):
+                        debug(.apsManager, "Temp basal failed: \(unitsPerHour) for: \(duration)")
+                        promise(.failure(error))
+                    }
+                }
+            }
+            .mapError { APSError.pumpError($0) }
+            .eraseToAnyPublisher()
+        }
 
     func enactBolus(units: Double, automatic: Bool) -> AnyPublisher<DoseEntry, Error> {
         Future { promise in
@@ -1044,7 +1027,7 @@ private extension PumpManager {
         .mapError { APSError.pumpError($0) }
         .eraseToAnyPublisher()
     }
-
+        
     func cancelBolus() -> AnyPublisher<DoseEntry?, Error> {
         Future { promise in
             self.cancelBolus { result in
