@@ -31,13 +31,20 @@ extension AddCarbs {
                         DecimalTextField("0", value: $state.carbs, formatter: formatter, autofocus: true, cleanInput: true)
                         Text("grams").foregroundColor(.secondary)
                     }
-                    DatePicker("Date", selection: $state.date)
+                    // DatePicker("Date", selection: $state.date)
+                    //    .disabled(true)
+                    Picker("Date", selection: $state.offset) {
+                        Text("15 min ago").tag(TimeInterval(minutes: -15))
+                        Text("Now").tag(TimeInterval(0))
+                        Text("In 15 min").tag(TimeInterval(minutes: 15))
+                    }
+                    .pickerStyle(.segmented)
                 }
 
                 Section {
                     Button { state.add() }
                     label: { Text("Add") }
-                        .disabled(state.carbs <= 0)
+                        .disabled(state.carbs <= 0 || state.carbs > 99)
                 }
             }
             .onAppear(perform: configureView)

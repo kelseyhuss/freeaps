@@ -95,6 +95,10 @@ public struct SensorData: Codable {
             self.date.addingTimeInterval(-1*TimeInterval(minutes: Double(self.minutesSinceStart)))
         }
 
+    var sensorStartTime: Date? {
+        self.date.addingTimeInterval(-1*TimeInterval(minutes: Double(self.minutesSinceStart)))
+    }
+
     /// Sensor state (ready, failure, starting etc.)
     var state: SensorState {
         SensorState(stateByte: header[4])

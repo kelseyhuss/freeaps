@@ -17,7 +17,8 @@ extension Bolus {
 
         var body: some View {
             Form {
-                Section(header: Text("Recommendation")) {
+                // Section(header: Text("Recommendation")) {
+                Section {
                     if state.waitForSuggestion {
                         HStack {
                             Text("Wait please").foregroundColor(.secondary)
@@ -49,11 +50,13 @@ extension Bolus {
                             .onTapGesture {
                                 state.amount = state.insulinRecommended
                             }
-                    }
-                }
+                        // }
+                        // }
 
-                if !state.waitForSuggestion {
-                    Section(header: Text("Bolus")) {
+                        // if !state.waitForSuggestion {
+                        //    Section(header: Text("Bolus")) {
+
+                        //   VStack {
                         HStack {
                             Text("Amount")
                             Spacer()
@@ -66,24 +69,32 @@ extension Bolus {
                             )
                             Text("U").foregroundColor(.secondary)
                         }
-                    }
-
-                    Section {
-                        Button { state.add() }
-                        label: { Text("Enact bolus") }
-                            .disabled(state.amount <= 0)
-                    }
-
-                    Section {
-                        if waitForSuggestion {
-                            Button { state.showModal(for: nil) }
-                            label: { Text("Continue without bolus") }
-                        } else {
-                            Button { isAddInsulinAlertPresented = true }
-                            label: { Text("Add insulin without actually bolusing") }
-                                .disabled(state.amount <= 0)
+                        HStack {
+                            if state.amount > 0 {
+                                Button { state.add() }
+                                label: { Text("Enact bolus") }
+                                    .disabled(state.amount > state.inslinRequired)
+                            } else {
+                                Button { state.hideModal() } // happens to handle amount = 0 fine
+                                label: { Text("Skip bolus") }
+                            }
+                            Spacer()
                         }
+                        //      }
+                        //   }
                     }
+                    /*
+                     Section {
+                         if waitForSuggestion {
+                             Button { state.showModal(for: nil) }
+                             label: { Text("Continue without bolus") }
+                         } else {
+                             Button { isAddInsulinAlertPresented = true }
+                             label: { Text("Add insulin without actually bolusing") }
+                                 .disabled(state.amount <= 0)
+                         }
+                     }
+                     */
                 }
             }
             .alert(isPresented: $isAddInsulinAlertPresented) {
@@ -123,5 +134,11 @@ struct ActivityIndicator: UIViewRepresentable {
 
     func updateUIView(_ uiView: UIActivityIndicatorView, context _: UIViewRepresentableContext<ActivityIndicator>) {
         isAnimating ? uiView.startAnimating() : uiView.stopAnimating()
+    }
+}
+
+struct Previews_BolusRootView_Previews: PreviewProvider {
+    static var previews: some View {
+        /*@START_MENU_TOKEN@*/Text("Hello, World!")/*@END_MENU_TOKEN@*/
     }
 }
