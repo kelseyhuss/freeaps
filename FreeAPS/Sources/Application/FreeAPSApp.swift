@@ -1,16 +1,6 @@
 import SwiftUI
 import Swinject
 
-extension Bundle {
-    var releaseVersionNumber: String? {
-        infoDictionary?["CFBundleShortVersionString"] as? String
-    }
-
-    var buildVersionNumber: String? {
-        infoDictionary?["CFBundleVersion"] as? String
-    }
-}
-
 @main struct FreeAPSApp: App {
     @Environment(\.scenePhase) var scenePhase
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
@@ -53,18 +43,9 @@ extension Bundle {
     }
 
     init() {
-        var buildDate: Date {
-            if let infoPath = Bundle.main.path(forResource: "Info", ofType: "plist"),
-               let infoAttr = try? FileManager.default.attributesOfItem(atPath: infoPath),
-               let infoDate = infoAttr[.modificationDate] as? Date
-            {
-                return infoDate
-            }
-            return Date()
-        }
         debug(
             .default,
-            "FreeAPS X Started: v\(Bundle.main.releaseVersionNumber ?? "")(\(Bundle.main.buildVersionNumber ?? "")) [buildDate: \(buildDate)]"
+            "FreeAPS X Started: v\(Bundle.main.releaseVersionNumber ?? "")(\(Bundle.main.buildVersionNumber ?? "")) [buildDate: \(Bundle.main.buildDate)]"
         )
         loadServices()
     }
@@ -76,5 +57,23 @@ extension Bundle {
         .onChange(of: scenePhase) { newScenePhase in
             debug(.default, "APPLICATION PHASE: \(newScenePhase)")
         }
+    }
+}
+
+extension Bundle {
+    var releaseVersionNumber: String? {
+        infoDictionary?["CFBundleShortVersionString"] as? String
+    }
+    var buildVersionNumber: String? {
+        infoDictionary?["CFBundleVersion"] as? String
+    }
+    var buildDate: Date {
+        if let infoPath = Bundle.main.path(forResource: "Info", ofType: "plist"),
+           let infoAttr = try? FileManager.default.attributesOfItem(atPath: infoPath),
+           let infoDate = infoAttr[.modificationDate] as? Date
+        {
+            return infoDate
+        }
+        return Date()
     }
 }

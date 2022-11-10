@@ -745,22 +745,13 @@ final class BaseAPSManager: APSManager, Injectable {
         }
         let af = preferences.adjustmentFactor
         let insulin_type = preferences.curve
-        var buildDate: Date {
-            if let infoPath = Bundle.main.path(forResource: "Info", ofType: "plist"),
-               let infoAttr = try? FileManager.default.attributesOfItem(atPath: infoPath),
-               let infoDate = infoAttr[.modificationDate] as? Date
-            {
-                return infoDate
-            }
-            return Date()
-        }
-        let nsObject: AnyObject? = Bundle.main.infoDictionary!["CFBundleShortVersionString"] as AnyObject
-        let version = nsObject as? String
-        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
+        let buildDate = Bundle.main.buildDate
+        let version = Bundle.main.releaseVersionNumber
+        let build = Bundle.main.buildVersionNumber
         let branch = Bundle.main.infoDictionary?["NSHumanReadableCopyright"] as? String
         let pump_ = pumpManager?.localizedTitle ?? ""
         let cgm = settingsManager.settings.cgm
-        var file = OpenAPS.Monitor.dailyStats
+        let file = OpenAPS.Monitor.dailyStats
         var iPa: Decimal = 75
         if preferences.useCustomPeakTime {
             iPa = preferences.insulinPeakTime
@@ -770,6 +761,32 @@ final class BaseAPSManager: APSManager, Injectable {
             iPa = 50
         }
 
+        // Retrieve the loopStats data
+        let lsData = storage.retrieve(OpenAPS.Monitor.loopStats, as: [LoopStats].self)?
+            .sorted { $0.createdAt > $1.createdAt } ?? []
+        var successRate: Double?
+        var roundedMinutesBetweenLoops: Double?
+
+        if !lsData.isEmpty {
+            var i = 0.0
+            var successNR = 0.0
+            var errorNR = 0.0
+            for each in lsData {
+                i += 1
+                if each.loopStatus.contains("Success") {
+                    successNR += 1
+                } else {
+                    errorNR += 1
+                }
+            }
+            successRate = (successNR / Double(i)) * 100
+
+            let loopDataTime = lsData[0].createdAt - lsData[Int(i) - 1].createdAt
+            let minutesBetweenLoops = (loopDataTime.timeInterval / Double(i)) / 60
+            roundedMinutesBetweenLoops = round(minutesBetweenLoops * 10) / 10
+        }
+
+        // Retrieve the 10 days data array
         var uniqEvents_1 = storage.retrieve(OpenAPS.Monitor.tenDaysStats, as: [TenDaysStats].self)?
             .filter { $0.createdAt.addingTimeInterval(365.days.timeInterval) > Date() }
             .sorted { $0.createdAt > $1.createdAt } ?? []
@@ -810,24 +827,20 @@ final class BaseAPSManager: APSManager, Injectable {
         let IFCCa1CStatisticValue_90 = 10.929 * (NGSPa1CStatisticValue_90 - 2.152)
 
         // HbA1c string and BG string:
-
         var HbA1c_string_1 = ""
         var string7Days = ""
         var string30Days = ""
         var string90Days = ""
         var stringTotal = ""
-
         var bgString1day = ""
         var bgString7Days = ""
         var bgString30Days = ""
         var bgString90Days = ""
         var bgAverageTotalString = ""
-
+        
         let daysBG = tir().daysWithBG
-
         let avg1 = tir().averageGlucose_1
         let avg7 = tir().averageGlucose_7
-        let avg10 = tir().averageGlucose_10
         let avgTot = tir().averageGlucose
 
         if avg1 != 0 {
@@ -873,8 +886,6 @@ final class BaseAPSManager: APSManager, Injectable {
 
         let bgAverageString = bgString1day + bgString7Days + bgString30Days + bgString90Days + bgAverageTotalString
 
-        let tenDaysAverage = roundDecimal(tir().averageGlucose_10, 1)
-
         let dailystat = DailyStats(
             createdAt: Date(),
             FAX_Build_Version: version ?? "",
@@ -891,16 +902,19 @@ final class BaseAPSManager: APSManager, Injectable {
             Carbs_24h: carbTotal,
             TIR: tirString,
             BG_Average: bgAverageString,
-            HbA1c: HbA1c_string
+            HbA1c: HbA1c_string,
+            Loop_Cycles: "Success Rate : \(round(successRate ?? 0)) %. Average Time Between Loop Cycles: \(roundedMinutesBetweenLoops ?? 0) min."
         )
 
-        let savedDailyStas = storage.retrieve(OpenAPS.Monitor.dailyStats, as: [DailyStats].self)
-        let lastDailyStatsEntry = savedDailyStas?[0].AdjustmentFactor ?? 0
+        let savedDailyStas = storage.retrieve(OpenAPS.Monitor.dailyStats, as: [DailyStats].self)?
+            .sorted { $0.createdAt > $1.createdAt } ?? []
+        let lastDailyStatsEntry = savedDailyStas.count - 1
+
         var uniqeEvents: [DailyStats] = []
 
-        if lastDailyStatsEntry != 0 {
+        if lastDailyStatsEntry <= 0 {
             storage.save(dailystat, as: file)
-        } else if Date() > savedDailyStas?[0].createdAt.addingTimeInterval(1.days.timeInterval) ?? Date() {
+        } else if Date() > savedDailyStas[0].createdAt.addingTimeInterval(1.days.timeInterval) {
             storage.transaction { storage in
                 storage.append(dailystat, to: file, uniqBy: \.createdAt)
                 uniqeEvents = storage.retrieve(file, as: [DailyStats].self)?
@@ -912,13 +926,12 @@ final class BaseAPSManager: APSManager, Injectable {
     }
 
     func loopStats(error: Error? = nil) {
-        var file = OpenAPS.Monitor.loopStats
+        let file = OpenAPS.Monitor.loopStats
         var errString = "Success"
 
         if let error = error {
             errString = error.localizedDescription
         }
-
         let loopstat = LoopStats(
             createdAt: Date(),
             loopStatus: errString
