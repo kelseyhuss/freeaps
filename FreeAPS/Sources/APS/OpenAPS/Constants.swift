@@ -59,6 +59,7 @@ extension OpenAPS {
         static let alertHistory = "monitor/alerthistory.json"
         static let dailyStats = "monitor/dailyStats.json"
         static let tenDaysStats = "monitor/tenDaysStats.json"
+        static let loopStats = "monitor/loopStats.json"
     }
 
     enum Enact {

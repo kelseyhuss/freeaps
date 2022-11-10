@@ -215,9 +215,11 @@ final class BaseAPSManager: APSManager, Injectable {
         isLooping.send(false)
 
         if let error = error {
+            loopStats(error: error)
             warning(.apsManager, "Loop failed with error: \(error.localizedDescription)")
             processError(error)
         } else {
+            loopStats()
             debug(.apsManager, "Loop succeeded")
             lastLoopDate = Date()
             lastError.send(nil)
@@ -753,7 +755,7 @@ final class BaseAPSManager: APSManager, Injectable {
             return Date()
         }
         let nsObject: AnyObject? = Bundle.main.infoDictionary!["CFBundleShortVersionString"] as AnyObject
-        let version = nsObject as! String
+        let version = nsObject as? String
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
         let branch = Bundle.main.infoDictionary?["NSHumanReadableCopyright"] as? String
         let pump_ = pumpManager?.localizedTitle ?? ""
@@ -875,7 +877,7 @@ final class BaseAPSManager: APSManager, Injectable {
 
         let dailystat = DailyStats(
             createdAt: Date(),
-            FAX_Build_Version: version,
+            FAX_Build_Version: version ?? "",
             FAX_Build_Number: build ?? "1",
             FAX_Branch: branch ?? "N/A",
             FAX_Build_Date: buildDate,
@@ -906,6 +908,31 @@ final class BaseAPSManager: APSManager, Injectable {
                     .sorted { $0.createdAt > $1.createdAt } ?? []
                 storage.save(Array(uniqeEvents), as: file)
             }
+        }
+    }
+
+    func loopStats(error: Error? = nil) {
+        var file = OpenAPS.Monitor.loopStats
+        var errString = "Success"
+
+        if let error = error {
+            errString = error.localizedDescription
+        }
+
+        let loopstat = LoopStats(
+            createdAt: Date(),
+            loopStatus: errString
+        )
+
+        var uniqEvents: [LoopStats] = []
+
+        storage.transaction { storage in
+            storage.append(loopstat, to: file, uniqBy: \.createdAt)
+            uniqEvents = storage.retrieve(file, as: [LoopStats].self)?
+                .filter { $0.createdAt.addingTimeInterval(24.hours.timeInterval) > Date() }
+                .sorted { $0.createdAt > $1.createdAt } ?? []
+
+            storage.save(Array(uniqEvents), as: file)
         }
     }
 
